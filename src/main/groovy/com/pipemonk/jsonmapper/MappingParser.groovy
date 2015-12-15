@@ -36,17 +36,18 @@ class MappingParser {
         String scriptAtoB = null;
         String scriptBtoA = null;
 
+        String expressionType = mapping.get("expressionType");
         String type = mapping.get('type');
         switch (type) {
             case 'bi' :
-                scriptAtoB = getScriptForPrimitive(prefixA, prefixB, keysA, keysB);
-                scriptBtoA = getScriptForPrimitive(prefixB, prefixA, keysB, keysA);
+                scriptAtoB = getScriptForPrimitive(prefixA, prefixB, keysA, keysB, expressionType, rawFieldA);
+                scriptBtoA = getScriptForPrimitive(prefixB, prefixA, keysB, keysA, expressionType, rawFieldB);
                 break;
             case 'AtoB' :
-                scriptAtoB = getScriptForPrimitive(prefixA, prefixB, keysA, keysB);
+                scriptAtoB = getScriptForPrimitive(prefixA, prefixB, keysA, keysB, expressionType, rawFieldA);
                 break;
             case 'BtoA' :
-                scriptBtoA = getScriptForPrimitive(prefixB, prefixA, keysB, keysA);
+                scriptBtoA = getScriptForPrimitive(prefixB, prefixA, keysB, keysA, expressionType, rawFieldB);
                 break;
         }
 
@@ -164,11 +165,21 @@ class MappingParser {
         return processorList;
     }
 
-    private static String getScriptForPrimitive(String sourcePrefix, String destinationPrefix, List<String> sourceKeys, List<String> destinationKeys) {
+    private static String getScriptForPrimitive(String sourcePrefix, String destinationPrefix, List<String> sourceKeys, List<String> destinationKeys, String expressionType, String rawSourceField) {
         boolean loop = sourcePrefix.endsWith('[loopIndex]');
         String script = "";
         String fieldToModify = destinationPrefix;
         String lastDestinationKey = destinationKeys[destinationKeys.size() - 1];
+
+        if(loop) {
+            String arrayA = sourcePrefix[0..-12];
+            String arrayB = destinationPrefix[0..-12];
+            script = script + "for(int loopIndex = 0; loopIndex < ${arrayA}.size(); loopIndex++) {\n";
+            script = script + "if(${fieldToModify} == null)\n" +
+                    "{\n" +
+                    "${arrayB} << [:]\n" +
+                    "}\n";
+        }
 
         destinationKeys.take(destinationKeys.size() - 1).each({
             fieldToModify = fieldToModify + "[\"$it\"]";
@@ -183,11 +194,13 @@ class MappingParser {
             fieldToGet = fieldToGet + "[\"$it\"]";
         });
 
-        if(loop) {
-            String arrayA = sourcePrefix[0..-12];
-            script = script + "for(int loopIndex = 0; loopIndex < ${arrayA}.size(); loopIndex++) {\n";
+        if(expressionType == 'expression') {
+            script = script + "def value = $rawSourceField \n";
+            script = script + "$fieldToModify['$lastDestinationKey'] = value";
         }
-        script = script + "$fieldToModify['$lastDestinationKey'] = $fieldToGet";
+        else {
+            script = script + "$fieldToModify['$lastDestinationKey'] = $fieldToGet";
+        }
         if(loop) {
             script = script + "\n}";
         }

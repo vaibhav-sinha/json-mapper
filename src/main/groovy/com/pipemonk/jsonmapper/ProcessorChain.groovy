@@ -11,6 +11,10 @@ class ProcessorChain implements Processor {
         processorList.add(processor);
     }
 
+    void addProcessor(List<Processor> processors) {
+        processorList.addAll(processors);
+    }
+
     @Override
     void map(GroovyShell shell, boolean evaluateAtoB) {
         processorList.each {

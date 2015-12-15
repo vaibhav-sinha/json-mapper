@@ -5,7 +5,7 @@ package com.pipemonk.jsonmapper
  */
 interface JsonMapper {
 
-    String map(String fromSchema, String toSchema, String object);
-    Map map(Map fromSchema, Map toSchema, Map object);
+    String map(String mapping, String fromSchema, String toSchema, String object);
+    Map map(Map mapping, Map fromSchema, Map toSchema, Map object);
 
 }
