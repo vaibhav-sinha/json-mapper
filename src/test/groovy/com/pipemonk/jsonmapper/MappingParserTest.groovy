@@ -58,11 +58,43 @@ class MappingParserTest {
                     "type" : "bi",
                     "fieldA" : "product",
                     "fieldB" : "item",
+                    "fieldType" : "object",
                     "mappings" : [
                         {
                             "type" : "bi",
                             "fieldA" : "name",
                             "fieldB" : "fn",
+                            "fieldType" : "string"
+                        }
+                    ]
+                }
+            ]
+        }''';
+
+        Map mappingMap = jsonSlurper.parseText(mapping) as Map;
+
+        MappingParser mappingParser = new MappingParser();
+        mappingParser.parse(mappingMap, null, null, 'object', null, null);
+    }
+
+    @Test
+    void testArrayNesting() {
+
+        JsonSlurper jsonSlurper = new JsonSlurper();
+
+        String mapping = '''{
+            "mappings" : [
+                {
+                    "type" : "bi",
+                    "fieldA" : "product",
+                    "fieldB" : "item",
+                    "fieldType" : "array",
+                    "mappings" : [
+                        {
+                            "type" : "bi",
+                            "fieldA" : "name",
+                            "fieldB" : "name.fullname",
+                            "fieldType" : "string"
                         }
                     ]
                 }

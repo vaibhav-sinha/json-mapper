@@ -19,6 +19,7 @@ class MappingParser {
                 processorList.addAll(parseForObject(mapping, prefixA, prefixB, schemaA, schemaB));
                 break;
             case 'array' :
+                processorList.addAll(parseForArray(mapping, prefixA, prefixB, schemaA, schemaB));
                 break;
 
         }
@@ -92,7 +93,7 @@ class MappingParser {
         List<Map> mappingList = mapping.get('mappings') as List<Map>;
         mappingList.each {
             //Find out the type of source node from the schema for the current mapping
-            String childType = '';
+            String childType = it['fieldType'];
             switch (childType) {
                 case 'object' :
                     processorList.addAll(parse(it, prefixA, prefixB, 'object', schemaA, schemaB));
@@ -137,10 +138,10 @@ class MappingParser {
         processorList.add(processor);
         //Modify the prefixA and prefixB with the key of the current object
         keysA.each {
-            prefixA = prefixA + "[\"$it\"]";
+            prefixA = prefixA + "[\"$it\"][loopIndex]";
         }
         keysB.each {
-            prefixB = prefixB + "[\"$it\"]";
+            prefixB = prefixB + "[\"$it\"][loopIndex]";
         }
 
         //Run a loop to process all mappings within the current object
@@ -164,9 +165,12 @@ class MappingParser {
     }
 
     private static String getScriptForPrimitive(String sourcePrefix, String destinationPrefix, List<String> sourceKeys, List<String> destinationKeys) {
+        boolean loop = sourcePrefix.endsWith('[loopIndex]');
         String script = "";
         String fieldToModify = destinationPrefix;
-        destinationKeys.each({
+        String lastDestinationKey = destinationKeys[destinationKeys.size() - 1];
+
+        destinationKeys.take(destinationKeys.size() - 1).each({
             fieldToModify = fieldToModify + "[\"$it\"]";
             script = script + "if($fieldToModify == null)\n" +
                     "{\n" +
@@ -179,7 +183,14 @@ class MappingParser {
             fieldToGet = fieldToGet + "[\"$it\"]";
         });
 
-        script = script + "$fieldToModify = $fieldToGet";
+        if(loop) {
+            String arrayA = sourcePrefix[0..-12];
+            script = script + "for(int loopIndex = 0; loopIndex < ${arrayA}.size(); loopIndex++) {\n";
+        }
+        script = script + "$fieldToModify['$lastDestinationKey'] = $fieldToGet";
+        if(loop) {
+            script = script + "\n}";
+        }
         return script;
     }
 
