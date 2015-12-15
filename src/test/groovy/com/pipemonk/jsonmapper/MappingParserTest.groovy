@@ -23,6 +23,55 @@ class MappingParserTest {
         Map mappingMap = jsonSlurper.parseText(mapping) as Map;
 
         MappingParser mappingParser = new MappingParser();
-        mappingParser.parse(null, null, mappingMap);
+        mappingParser.parse(mappingMap, null, null, 'object', null, null);
+    }
+
+    @Test
+    void testSimpleNesting() {
+
+        JsonSlurper jsonSlurper = new JsonSlurper();
+
+        String mapping = '''{
+            "mappings" : [
+                {
+                    "type" : "bi",
+                    "fieldA" : "product.fn",
+                    "fieldB" : "item.fn"
+                }
+            ]
+        }''';
+
+        Map mappingMap = jsonSlurper.parseText(mapping) as Map;
+
+        MappingParser mappingParser = new MappingParser();
+        mappingParser.parse(mappingMap, null, null, 'object', null, null);
+    }
+
+    @Test
+    void testObjectNesting() {
+
+        JsonSlurper jsonSlurper = new JsonSlurper();
+
+        String mapping = '''{
+            "mappings" : [
+                {
+                    "type" : "bi",
+                    "fieldA" : "product",
+                    "fieldB" : "item",
+                    "mappings" : [
+                        {
+                            "type" : "bi",
+                            "fieldA" : "name",
+                            "fieldB" : "fn",
+                        }
+                    ]
+                }
+            ]
+        }''';
+
+        Map mappingMap = jsonSlurper.parseText(mapping) as Map;
+
+        MappingParser mappingParser = new MappingParser();
+        mappingParser.parse(mappingMap, null, null, 'object', null, null);
     }
 }
