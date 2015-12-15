@@ -63,6 +63,10 @@ class JsonMapperTest {
         JsonMapper jsonMapper = new JsonMapperImpl();
 
         String mapping = '''{
+            "id" : {
+                "A_schema_id" : "shopify/order/v1",
+                "B_schema_id" : "qbo/order/v2"
+            },
             "mappings" : [
                 {
                     "type" : "bi",
@@ -88,8 +92,12 @@ class JsonMapperTest {
             ]
         }''';
 
-        String fromSchema = "{}";
-        String toSchema = "{}";
+        String fromSchema = '''{
+            "id" : "shopify/order/v1"
+        }''';
+        String toSchema = '''{
+            "id" : "qbo/order/v2"
+        }''';
 
         String object = '''{
             "name" : "order1",
@@ -104,10 +112,28 @@ class JsonMapperTest {
                     "name" : "prod3"
                 }
             ]
-        }'''
+        }''';
+
+        String object2 = '''{
+            "sku" : "order1",
+            "item" : [
+                {
+                    "name" : {
+                        "fullname" : "prod1"
+                    }
+                },
+                {
+                    "name" : {
+                        "fullname" : "prod2"
+                    }
+                }
+            ]
+        }''';
 
         String mapped = jsonMapper.map(mapping, fromSchema, toSchema, object);
+        String mapped2 = jsonMapper.map(mapping, toSchema, fromSchema, object2);
         println(mapped);
+        println(mapped2);
     }
 
 }
